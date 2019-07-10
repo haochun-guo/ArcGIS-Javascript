@@ -44,6 +44,7 @@
 		let mapview;
 		let maplayer;
 		let Request;
+		let Graphic;
 		let selectedLayer;
 		//let sceneview;
 		const DEFAULT_BASEMAP="osm";
@@ -59,10 +60,23 @@
 		// }
 		// )
 
-		require(["esri/Map","esri/views/MapView","esri/views/SceneView","esri/request","esri/layers/MapImageLayer","esri/widgets/Legend","esri/widgets/Search"],function(Map,MapView,SceneView,esriRequest,MapImageLayer,Legend,Search)
+		require(["esri/Map",
+		"esri/views/MapView",
+		"esri/views/SceneView",
+		"esri/request",
+		"esri/layers/MapImageLayer",
+		"esri/widgets/Legend",
+		"esri/widgets/Search","esri/Graphic"],function(Map,
+		MapView,
+		SceneView,
+		esriRequest,
+		MapImageLayer,
+		Legend,
+		Search,GraphicClass)
 		{
 			generateBasemaps();
 			Request=esriRequest;
+			Graphic=GraphicClass;
 
 			//satmap = new Map({basemap:"satellite"})
 			streetsmap=new Map({basemap:DEFAULT_BASEMAP})
@@ -176,6 +190,29 @@
 		// 	}
 		// 	)
 		//generate a list of buttons for basemaps
+		function drawPoint(x,y)
+		{
+			let p = {
+				type: "point",
+				longitude:x,
+				latitude:y
+			}
+			let s = {
+				type: "simple-marker",
+				color:"red"
+			}
+			let graphic = new Graphic({geometry:p,symbol:s})
+			mapview.graphics.add(graphic)
+
+		}
+		function drawLine(x1,y1,x2,y2)
+		{
+
+		}
+		function drawPolygon(x1,y1,x2,y2,x3,y3)
+		{
+
+		}
 		
 		function buildToc()	
 		   {
