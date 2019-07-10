@@ -3,7 +3,7 @@
 <html>
 <head>
 	<title>IGeometry-Head</title>
-	<script src='https://js.arcgis.com/4.4'></script>
+	<script src='https://js.arcgis.com/4.5/init.js'></script>
 	<link rel="stylesheet" type="text/css" href="https://js.arcgis.com/4.4/esri/css/main.css">
 </head>
 <body>
@@ -199,18 +199,64 @@
 			}
 			let s = {
 				type: "simple-marker",
-				color:"red"
+				color:[0,255,0,0.2],
+				outline: {
+					// autocasts as new SimpleLineSymbol()
+					color: [255, 255, 255],
+					width: 2
+          }
 			}
 			let graphic = new Graphic({geometry:p,symbol:s})
 			mapview.graphics.add(graphic)
 
 		}
-		function drawLine(x1,y1,x2,y2)
+		function drawLine(x1,y1,x2,y2,x3,y3)
 		{
+			let l={
+				type: "polyline",
+				paths:[
+					[x1,y1],
+					[x2,y2],
+					[x3,y3]
+				]
+			}
+			let s ={
+				type:"simple-line",
+				color:[255,0,0],
+				width:4,
+				cap: "round",
+				style:"solid"
+			}
+			let polylineGraphic=new Graphic({geometry:l,symbol:s})
+			mapview.graphics.add(polylineGraphic)
 
 		}
 		function drawPolygon(x1,y1,x2,y2,x3,y3)
 		{
+			let p={
+				type:"polygon",
+				rings:[
+					[x1,y1],
+					[x2,y2],
+					[x3,y3],
+					[x1,y1]
+				]
+			}
+			let s={
+				type:"simple-fill",
+				color:[227, 139, 79, 0.8],
+				outline:{
+					color:[255,255,255],
+					width:2,
+					style:"short-dot",
+					cap:"round"
+				},
+				style:"cross"
+			}
+			let polygonGraphic=new Graphic({
+				geometry:p,symbol:s
+			})
+			mapview.graphics.add(polygonGraphic)
 
 		}
 		
