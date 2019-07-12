@@ -1,0 +1,257 @@
+<!-- [esri.Basemap] Unable to find basemap definition for: sss. Try one of these: "streets", "satellite", "hybrid", "terrain", "topo", "gray", "dark-gray", "oceans", "national-geographic", "osm", "dark-gray-vector", "gray-vector", "streets-vector", "topo-vector", "streets-night-vector", "streets-relief-vector", "streets-navigation-vector" -->
+<!DOCTYPE html>
+<html>
+<head>
+	<title>IGeometry-Head</title>
+	<script src='Toc.js'></script>
+	<script src="AttributeTable.js"></script>
+	<script src='https://js.arcgis.com/4.5/init.js'></script>
+	<link rel="stylesheet" type="text/css" href="https://js.arcgis.com/4.4/esri/css/main.css">
+</head>
+<body>
+	ArcGIS Server URL: <input type="text" id="txtArcGISServerURL" value='https://sampleserver6.arcgisonline.com/arcgis/rest/services' style="width:500px"><button id="bttnLoadService">Load Service</button><br>
+	Servces: <select id="lstservices"></select> <br>
+	Basemap: <select id="buttons"></select>
+	<table border=1>
+		<tr>
+			<td valign="top">
+				<div id="toc">
+				</div>
+			</td>
+			<td>
+				<div id = 'mapview' style ='width: 700px; height: 500px'> Map goes here</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=2><div id="pagesNums">Page numbers go here</div></td>
+		</tr>
+		<tr>
+			<td colspan=2><div id="attributetable">ATTRIBUTE TABLE</div></td>
+		</tr>
+	</table>
+	<script type="text/javascript">
+		let streetsmap;
+		let mapview;
+		let maplayer;
+		let Request;
+		let Graphic;
+		let selectedLayer;
+		let MapImageLayer1;
+
+		const DEFAULT_BASEMAP="osm";
+		const DEFAULT_MAP_SERVICE="USA"
+		const DEFAULT_PAGE_SIZE=50
+		
+
+		require(["esri/Map",
+		"esri/views/MapView",
+		"esri/views/SceneView",
+		"esri/request",
+		"esri/layers/MapImageLayer",
+		"esri/widgets/Legend",
+		"esri/widgets/Search","esri/Graphic"],function(Map,
+		MapView,
+		SceneView,
+		esriRequest,
+		MapImageLayer,
+		Legend,
+		Search,GraphicClass)
+		{
+			generateBasemaps();
+			Request=esriRequest;
+			Graphic=GraphicClass;
+			MapImageLayer1=MapImageLayer;
+
+			streetsmap=new Map({basemap:DEFAULT_BASEMAP})
+			
+			let viewoptions={container:"mapview",map:streetsmap,zoom:13,center:[171.24511494018407,-44.09213876558367],scale:10000}
+			mapview = new MapView(viewoptions)
+
+			let legend = new Legend({view:mapview})
+			mapview.ui.add(legend,"bottom-left")
+
+			let search = new Search({view:mapview})
+			mapview.ui.add(search,"top-left")
+
+			populateMapServices();
+
+			function populateMapServices()
+			{
+				let url=document.getElementById("txtArcGISServerURL").value;
+				url=url+"?f=pjson";
+				//"https://sampleserver6.arcgisonline.com/arcgis/rest/services?f=pjson"
+				let options={responseType:"json"}
+				Request(url,options)
+				.then(response=>{
+				let results = response.data
+			
+				for(let i=0;i < results.services.length;i++)
+					{
+						if( results.services[i].type ==="MapServer")
+						{
+							let option = document.createElement("option")
+							option.textContent= results.services[i].name
+							lstservices.appendChild(option)
+							if (results.services[i].name == DEFAULT_MAP_SERVICE) option.selected=true
+							}
+
+						}
+					
+				
+				})
+				setDefaultService();
+				// let mapServiceUrl= url+"/"+DEFAULT_MAP_SERVICE+"/MapServer?f=pjson"
+				// maplayer=new MapImageLayer({url:mapServiceUrl})
+				// console.log("1")
+				// streetsmap.removeAll()
+				// console.log("2")
+				// streetsmap.add(maplayer)
+				// console.log("3")
+				// maplayer.then(buildToc)
+				// console.log("4")
+			}
+
+            // let url=document.getElementById("txtArcGISServerURL").value;
+			// let mapServiceUrl= url+"/"+DEFAULT_MAP_SERVICE+"/MapServer?f=pjson"
+			// maplayer=new MapImageLayer({url:mapServiceUrl})
+			// streetsmap.add(maplayer)
+			// maplayer.then(buildToc)
+			
+	
+			let lstservices = document.getElementById("lstservices")
+			lstservices.addEventListener("change",()=>
+			{
+				selectedLayer = lstservices.options[lstservices.selectedIndex].textContent
+				alert(selectedLayer)
+				let url=document.getElementById("txtArcGISServerURL").value;
+				let layerurl= url+"/"+selectedLayer+"/MapServer?f=pjson"
+				maplayer = new MapImageLayer({url:layerurl})
+				streetsmap.removeAll()
+			    streetsmap.add(maplayer)
+			    maplayer.then(buildToc)
+
+			})
+			document.getElementById("bttnLoadService").addEventListener("click",function(){
+			populateMapServices();
+		})	
+		}
+		)
+		function setDefaultService()
+		    {
+				let url=document.getElementById("txtArcGISServerURL").value;
+				let mapServiceUrl= url+"/"+DEFAULT_MAP_SERVICE+"/MapServer?f=pjson"
+				maplayer=new MapImageLayer1({url:mapServiceUrl})
+				streetsmap.removeAll()
+				streetsmap.add(maplayer)
+				maplayer.then(buildToc)
+		    }
+		function drawPoint(x,y)
+		{
+			let p = {
+				type: "point",
+				longitude:x,
+				latitude:y
+			}
+			let s = {
+				type: "simple-marker",
+				color:[0,255,0,0.2],
+				outline: {
+					color: [255, 255, 255],
+					width: 2
+          }
+			}
+			let graphic = new Graphic({geometry:p,symbol:s})
+			mapview.graphics.add(graphic)
+
+		}
+		function drawLine(x1,y1,x2,y2,x3,y3)
+		{
+			let l={
+				type: "polyline",
+				paths:[
+					[x1,y1],
+					[x2,y2],
+					[x3,y3]
+				]
+			}
+			let s ={
+				type:"simple-line",
+				color:[255,0,0],
+				width:4,
+				cap: "round",
+				style:"solid"
+			}
+			let polylineGraphic=new Graphic({geometry:l,symbol:s})
+			mapview.graphics.add(polylineGraphic)
+
+		}
+		function drawPolygon(x1,y1,x2,y2,x3,y3)
+		{
+			let p={
+				type:"polygon",
+				rings:[
+					[x1,y1],
+					[x2,y2],
+					[x3,y3],
+					[x1,y1]
+				]
+			}
+			let s={
+				type:"simple-fill",
+				color:[227, 139, 79, 0.8],
+				outline:{
+					color:[255,255,255],
+					width:2,
+					style:"short-dot",
+					cap:"round"
+				},
+				style:"cross"
+			}
+			let polygonGraphic=new Graphic({
+				geometry:p,symbol:s
+			})
+			mapview.graphics.add(polygonGraphic)
+
+		}
+		
+		function buildToc()	
+		   {
+			   	
+				let toc = new Toc("toc",maplayer)
+				mapview.goTo(maplayer.fullExtent)
+
+			    }						
+		
+		function generateBasemaps()
+		{
+			let basemaps=[];
+			basemaps.push("satellite");
+			basemaps.push("topo");
+			basemaps.push("osm");
+			basemaps.push("hybrid");
+			basemaps.push("terrain")
+			basemaps.push("dark-gray")
+			basemaps.push("oceans")
+			basemaps.push("streets-night-vector")
+			basemaps.push("streets")
+			
+			let buttonsSel= document.getElementById("buttons")
+			let changeBasemap=e=>streetsmap.basemap=buttonsSel.options[buttonsSel.selectedIndex].textContent
+			for(let i=0;i<basemaps.length;i++)
+			{
+				let option=document.createElement("option")
+				option.id=basemaps[i]
+				option.textContent=basemaps[i]
+				buttonsSel.appendChild(option)
+				if (basemaps[i]==DEFAULT_BASEMAP) option.selected=true
+			}
+			buttonsSel.addEventListener("change",changeBasemap)
+
+		}
+		
+
+	</script>
+
+
+</body>
+</html>
