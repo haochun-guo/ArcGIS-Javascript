@@ -40,7 +40,7 @@
 
 		const DEFAULT_BASEMAP="osm";
 		const DEFAULT_MAP_SERVICE="USA"
-		const DEFAULT_PAGE_SIZE=50
+		const DEFAULT_PAGE_SIZE=10
 		
 
 		require(["esri/Map",
@@ -100,23 +100,10 @@
 				
 				})
 				setDefaultService();
-				// let mapServiceUrl= url+"/"+DEFAULT_MAP_SERVICE+"/MapServer?f=pjson"
-				// maplayer=new MapImageLayer({url:mapServiceUrl})
-				// console.log("1")
-				// streetsmap.removeAll()
-				// console.log("2")
-				// streetsmap.add(maplayer)
-				// console.log("3")
-				// maplayer.then(buildToc)
-				// console.log("4")
+				
 			}
 
-            // let url=document.getElementById("txtArcGISServerURL").value;
-			// let mapServiceUrl= url+"/"+DEFAULT_MAP_SERVICE+"/MapServer?f=pjson"
-			// maplayer=new MapImageLayer({url:mapServiceUrl})
-			// streetsmap.add(maplayer)
-			// maplayer.then(buildToc)
-			
+            
 	
 			let lstservices = document.getElementById("lstservices")
 			lstservices.addEventListener("change",()=>
@@ -218,10 +205,40 @@
 		   {
 			   	
 				let toc = new Toc("toc",maplayer)
-				mapview.goTo(maplayer.fullExtent)
+				//mapview.goTo(maplayer.fullExtent)
+				projectAndZoomIn(maplayer.fullExtent)
 
 			    }						
-		
+		function projectAndZoomIn(fullExtent){
+			let url="https://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/project"
+			let options={
+				responseType:"json",
+				query:{
+					f:"json",
+					inSR:JSON.stringify(fullExtent.spatialReference),
+					outSR:4326,
+					geometries:JSON.stringify({
+						"geometryType":"esriGeometryPoint",
+						"geometries":[
+						{"x":fullExtent.xmin,"y":fullExtent.ymin},
+						{"x":fullExtent.xmax,"y":fullExtent.ymax}
+						]
+						})
+				}
+			}
+		    Request(url,options).then(
+				response=>{
+					let data=response.data
+					let fe={}
+					fe.xmin=data.geometries[0].x 
+					fe.ymin=data.geometries[0].y
+					fe.xmax=data.geometries[1].x 
+					fe.ymax=data.geometries[1].y 
+					mapview.extent=fe
+
+				}
+			)
+		}
 		function generateBasemaps()
 		{
 			let basemaps=[];
