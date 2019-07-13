@@ -1,3 +1,4 @@
+
 class AttributeTable{
     constructor(mapServiceLayerURL){
         this.buttonPages=[];
@@ -53,6 +54,34 @@ class AttributeTable{
 					response=>featureCount(0))
 			
 		}
+	zoomIn(e){
+		let oid=e.target.oid;
+		let url=e.target.url;
+		//alert(oid+"-"+url);
+		let queryURL= url+"query"
+		let queryoptions={
+			responseType:"json",
+			query:{
+				f:"json",
+				objectIds:oid,
+				returnGeometry:true,
+				outSR:4326
+			}
+		}
+		Request(queryURL,queryoptions)
+		.then(
+			response=>{
+				//alert(JSON.stringify(response.data));
+				//alert(JSON.stringify(response.data.features[0].geometry));
+				mapview.goTo(response.data.features[0].geometry);
+				drawGeometry(response.data.features[0].geometry);
+
+			}
+			//response=>{alert("SUCCESS"+JSON.stringify(response))}
+			
+		)
+		//.catch(err=>rejects(alert("ERR"+err)))
+	}
     populateAttributeTable(pageNum)
 		{		
 			let queryurl=this.mapServiceLayerURL+"query";
@@ -74,6 +103,9 @@ class AttributeTable{
 				table.border=1.5;
 				let header = document.createElement("tr");
 				table.appendChild(header);
+				let zoomHeader = document.createElement("th");
+				zoomHeader.textContent="Zoom In";
+				header.appendChild(zoomHeader);
 				for (let i = 0; i < response.data.fields.length; i++)
 				{
 					let col=document.createElement("th");
@@ -86,11 +118,33 @@ class AttributeTable{
 					let feature= response.data.features[j];
 					let row = document.createElement("tr");
 					table.appendChild(row);
+					// let buttonZoomIn=document.createElement("button");
+					// row.appendChild(buttonZoomIn);
+					let zoomColum = document.createElement("td");
+
+					//zoomColum.textContent="Zoom";
+					//zoomColum.innerHTML="<img style='width:20px;height:20px' src='images/zoom.svg' />"
+					
+					//zoomColum.url=this.mapServiceLayerURL;
+					//zoomColum.addEventListener("click",this.zoomIn);
+					let image=document.createElement("img");
+					image.style.width="20px";
+					image.style.height="20px";
+					image.src="images/zoom.svg";
+					image.url=this.mapServiceLayerURL;
+					image.addEventListener("click",this.zoomIn);
+					zoomColum.appendChild(image);
+				    row.appendChild(zoomColum);
 					for (let i = 0; i <response.data.fields.length; i++)
 					{
 						let field=response.data.fields[i]
 						let col=document.createElement("td");
-						if (field.type ==  "esriFieldTypeDate")
+						if(field.type==="esriFieldTypeOID")
+						{
+							image.oid=feature.attributes[field.name];
+
+						}
+						if (field.type ===  "esriFieldTypeDate")
 						{
 							let date = new Date(feature.attributes[field.name]);
 							col.textContent=date;

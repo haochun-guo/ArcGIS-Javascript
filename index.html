@@ -131,59 +131,17 @@
 				streetsmap.removeAll()
 				streetsmap.add(maplayer)
 				maplayer.then(buildToc)
-		    }
-		function drawPoint(x,y)
-		{
-			let p = {
-				type: "point",
-				longitude:x,
-				latitude:y
 			}
-			let s = {
-				type: "simple-marker",
-				color:[0,255,0,0.2],
-				outline: {
-					color: [255, 255, 255],
-					width: 2
-          }
-			}
-			let graphic = new Graphic({geometry:p,symbol:s})
-			mapview.graphics.add(graphic)
-
-		}
-		function drawLine(x1,y1,x2,y2,x3,y3)
-		{
-			let l={
-				type: "polyline",
-				paths:[
-					[x1,y1],
-					[x2,y2],
-					[x3,y3]
-				]
-			}
-			let s ={
-				type:"simple-line",
-				color:[255,0,0],
-				width:4,
-				cap: "round",
-				style:"solid"
-			}
-			let polylineGraphic=new Graphic({geometry:l,symbol:s})
-			mapview.graphics.add(polylineGraphic)
-
-		}
-		function drawPolygon(x1,y1,x2,y2,x3,y3)
-		{
-			let p={
+		function drawGeometry(geometry,cleanup=true){
+			let g;
+			let s;
+			if (geometry.rings != undefined)
+			{
+			g={
 				type:"polygon",
-				rings:[
-					[x1,y1],
-					[x2,y2],
-					[x3,y3],
-					[x1,y1]
-				]
+				rings:geometry.rings
 			}
-			let s={
+			s={
 				type:"simple-fill",
 				color:[227, 139, 79, 0.8],
 				outline:{
@@ -194,12 +152,46 @@
 				},
 				style:"cross"
 			}
-			let polygonGraphic=new Graphic({
-				geometry:p,symbol:s
-			})
-			mapview.graphics.add(polygonGraphic)
+			}
+			else if (geometry.paths !=undefined)
+			{
+			g={
+				type: "polyline",
+				paths:geometry.paths
+			}
+			s ={
+				type:"simple-line",
+				color:[255,0,0],
+				width:10,
+				cap: "round",
+				style:"solid"
+			}
+			}
+			else{
+			g = {
+				type: "point",
+				longitude:geometry.x,
+				latitude:geometry.y
+			  }
+			s = {
+				type: "simple-marker",
+				color:[0,255,0,0.2],
+				size:20,
+				outline: {
+					color: [255, 255, 255],
+					width: 2
+              }
+			  }
+			}
+			if(cleanup===true) mapview.graphics=[];
+			let graphic = new Graphic({geometry:g,symbol:s});
+			mapview.graphics.add(graphic);
+			mapview.goTo(graphic)
+
 
 		}
+		
+		
 		
 		function buildToc()	
 		   {
@@ -235,7 +227,6 @@
 					fe.xmax=data.geometries[1].x 
 					fe.ymax=data.geometries[1].y 
 					mapview.extent=fe
-
 				}
 			)
 		}
