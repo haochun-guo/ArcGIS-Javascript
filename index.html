@@ -12,6 +12,7 @@
 	ArcGIS Server URL: <input type="text" id="txtArcGISServerURL" value='https://sampleserver6.arcgisonline.com/arcgis/rest/services' style="width:500px"><button id="bttnLoadService">Load Service</button><br>
 	Servces: <select id="lstservices"></select> <br>
 	Basemap: <select id="buttons"></select>
+	Use Current Extent: <input type="checkbox" checked id="chkMapExtent">
 	<table border=1>
 		<tr>
 			<td valign="top">
@@ -38,6 +39,7 @@
 		let selectedLayer;
 		let MapImageLayer1;
 
+
 		const DEFAULT_BASEMAP="osm";
 		const DEFAULT_MAP_SERVICE="USA"
 		const DEFAULT_PAGE_SIZE=10
@@ -49,7 +51,8 @@
 		"esri/request",
 		"esri/layers/MapImageLayer",
 		"esri/widgets/Legend",
-		"esri/widgets/Search","esri/Graphic"],function(Map,
+		"esri/widgets/Search",
+		"esri/Graphic"],function(Map,
 		MapView,
 		SceneView,
 		esriRequest,
@@ -66,6 +69,7 @@
 			
 			let viewoptions={container:"mapview",map:streetsmap,zoom:13,center:[171.24511494018407,-44.09213876558367],scale:10000}
 			mapview = new MapView(viewoptions)
+			mapview.useExtent=true
 
 			let legend = new Legend({view:mapview})
 			mapview.ui.add(legend,"bottom-left")
@@ -103,7 +107,13 @@
 				
 			}
 
-            
+			//set event on checkbox
+			const chkMapExtent=document.getElementById("chkMapExtent");
+			chkMapExtent.addEventListener("change",()=>
+			{
+				//onChangeMapExtent(mapview.useExtent)
+				mapview.useExtent=!(mapview.useExtent)
+			})
 	
 			let lstservices = document.getElementById("lstservices")
 			lstservices.addEventListener("change",()=>
@@ -123,6 +133,16 @@
 		})	
 		}
 		)
+		// function onChangeMapExtent(useExtent)
+		// {
+		// 	console.log("working")
+		// 	if (mapview != undefined) 
+		// 	{
+		// 		console.log("2");
+		// 		useExtent=document.getElementById("chkMapExtent").checked;
+		// 	}
+
+		// }
 		function setDefaultService()
 		    {
 				let url=document.getElementById("txtArcGISServerURL").value;
@@ -196,7 +216,7 @@
 		function buildToc()	
 		   {
 			   	
-				let toc = new Toc("toc",maplayer)
+				let toc = new Toc("toc",maplayer,mapview)
 				//mapview.goTo(maplayer.fullExtent)
 				projectAndZoomIn(maplayer.fullExtent)
 

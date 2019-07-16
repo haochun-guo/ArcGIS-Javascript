@@ -1,5 +1,6 @@
 class Toc{
-    constructor(tocElement,maplayer){
+    constructor(tocElement,maplayer,mapview){
+		 this.mapview=mapview;
          this.tocElement=document.getElementById(tocElement);
          let toc=this.tocElement;
 		 toc.innerHTML="";
@@ -27,7 +28,8 @@ class Toc{
 			let bttn=document.createElement("button");
             bttn.layerid=thislayer.id;
             bttn.layerURL=thislayer.url;
-			bttn.textContent="View";		
+			bttn.textContent="View";
+			bttn.mapview=this.mapview;		
 			bttn.addEventListener("click",this.openAttributeTable);
 
 			let layeritem = document.createElement("li");
@@ -50,6 +52,6 @@ class Toc{
 		}
 	openAttributeTable(e)
 		{
-			let attributeTable=new AttributeTable(e.target.layerURL);
+			let attributeTable=new AttributeTable(e.target.layerURL,e.target.mapview);
 		}
 	}

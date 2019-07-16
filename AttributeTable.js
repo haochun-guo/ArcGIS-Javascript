@@ -1,6 +1,7 @@
 
 class AttributeTable{
-    constructor(mapServiceLayerURL){
+    constructor(mapServiceLayerURL,mapview){
+		this.mapview=mapview;
         this.buttonPages=[];
         this.mapServiceLayerURL=mapServiceLayerURL+"/";
 		let featureCount=0;
@@ -17,17 +18,19 @@ class AttributeTable{
 				b.style.color="black"
 			})
 		}
-    populatePages(featureCount)
+    populatePages(featureCount,initialPage=1)
 		{
 			let pageCount=Math.ceil(featureCount/DEFAULT_PAGE_SIZE)
 			let pageNums=document.getElementById("pagesNums")
-			pageNums.innerHTML=""
+			//pageNums.innerHTML=""
+			while(pageNums.firstChild) pageNums.removeChild(pageNums.firstChild)
 			let instance=this
 			for (let i=0;i<pageCount;i++)
 			{
 				let button=document.createElement("button")
 				button.textContent=i+1
 				this.buttonPages.push(button)
+				if (i+1===initialPage) button.style.color="red"
 				button.addEventListener("click",function(e){
 					instance.resetButtonCol()
 					e.target.style.color="red"
@@ -41,14 +44,20 @@ class AttributeTable{
 		{
 				//mapServiceURL sample "https://sampleserver6.arcgisonline.com/arcgis/rest/services/"+selectedLayer+"/MapServer/"
 				let queryurl=this.mapServiceLayerURL+"query"
+				let extent=undefined
+				if(this.mapview.useExtent) extent=JSON.stringify(this.mapview.extent)
 				let queryoptions={
-					responseType:"json",
-					query:{
-						where:"1=1",
-						returnCountOnly:true,
-						f:"json" 
+						responseType:"json",
+						query:{
+							geometry:extent,
+							geometryType:"esriGeometryEnvelope",
+							inSR:JSON.stringify(this.mapview.extent.spatialReference),
+							spatialRel:"esriSpatialRelIntersects",
+							where:"1=1",
+							returnCountOnly:true,
+							f:"json" 
+						}
 					}
-				}
 				Request(queryurl,queryoptions).then(
 					response=>featureCount(response.data.count),
 					response=>featureCount(0))
@@ -87,16 +96,26 @@ class AttributeTable{
 			let queryurl=this.mapServiceLayerURL+"query";
 			let attributeTable=document.getElementById("attributetable");
 			attributeTable.innerHTML=""
+			let extent=undefined
+			if (this.mapview.useExtent) extent=JSON.stringify(this.mapview.extent)
+		
 			let queryoptions={
-				responseType:"json",
-				query:{
-					where:"1=1",
-					outFields:"*",
-					resultOffset:(pageNum-1)*DEFAULT_PAGE_SIZE+1,
-					resultRecordCount:DEFAULT_PAGE_SIZE,
-					f:"json"
+					responseType:"json",
+					query:{
+						where:"1=1",
+						geometry:extent,
+						geometryType:"esriGeometryEnvelope",
+						inSR:JSON.stringify(this.mapview.extent.spatialReference),
+						spatialRel:"esriSpatialRelIntersects",
+						outFields:"*",
+						resultOffset:(pageNum-1)*DEFAULT_PAGE_SIZE,
+						resultRecordCount:DEFAULT_PAGE_SIZE,
+						f:"json"
+					}
 				}
-			}
+
+			
+			
 			Request(queryurl,queryoptions).then(response=>
 			{
 				let table=document.createElement("table");
